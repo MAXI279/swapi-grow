@@ -2,24 +2,15 @@ const express = require('express');
 const axios = require('axios').default;
 const { SWAPI_BASE_URL, RESULTS_PER_PAGE } = require('./config/constants')
 
-const { sortByString, sortByNumeric } = require('./utils')
+const { sortByString, sortByNumeric, getAllResources } = require('./utils')
 
 const app = express();
 
 app.get('/people', async (req, res) => {
     const { sortBy } = req.query;
     try {
-        const firstPage = (await axios.get(`${SWAPI_BASE_URL}people?page=1`)).data;
 
-        const pages = Math.ceil(firstPage.count / RESULTS_PER_PAGE)
-
-        const repeats = Array.from(Array(pages-1).keys()).map(i => 2 + i);
-
-        const promises = repeats.map( (promisePage) => axios.get(`${SWAPI_BASE_URL}people?page=${promisePage}`))
-
-        const results = await Promise.all(promises)
-
-        let people = [...firstPage.results, ...results.map( res => res.data.results ).flat()]
+        let people = await getAllResources('people')
 
         const availableProps = {
             'name': sortByString("name"),
@@ -44,17 +35,7 @@ app.get('/people', async (req, res) => {
 app.get('/planets', async (req, res) => {
 
     try {
-        const firstPage = (await axios.get(`${SWAPI_BASE_URL}planets?page=1`)).data;
-
-        const pages = Math.ceil(firstPage.count / RESULTS_PER_PAGE)
-
-        const repeats = Array.from(Array(pages-1).keys()).map(i => 2 + i);
-
-        const promises = repeats.map( (promisePage) => axios.get(`${SWAPI_BASE_URL}planets?page=${promisePage}`))
-
-        const results = await Promise.all(promises)
-
-        let planets = [ ...firstPage.results, ...results.map( res => res.data.results ).flat() ]
+        let planets = await getAllResources('planets')
 
         residents = [...new Set(planets.map((planet) => (planet.residents)).flat())]
         //console.log(residents)
