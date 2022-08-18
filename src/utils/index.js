@@ -1,3 +1,5 @@
+const axios = require('axios').default;
+const { SWAPI_BASE_URL, RESULTS_PER_PAGE } = require('../config/constants')
 
 sortByString = (property) => {
     return (a,b) => ((a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0)

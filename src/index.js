@@ -1,6 +1,5 @@
 const express = require('express');
 const axios = require('axios').default;
-const { SWAPI_BASE_URL, RESULTS_PER_PAGE } = require('./config/constants')
 
 const { sortByString, sortByNumeric, getAllResources } = require('./utils')
 
