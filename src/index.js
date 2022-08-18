@@ -41,6 +41,47 @@ app.get('/people', async (req, res) => {
 
 })
 
+app.get('/planets', async (req, res) => {
+
+    try {
+        const firstPage = (await axios.get(`${SWAPI_BASE_URL}planets?page=1`)).data;
+
+        const pages = Math.ceil(firstPage.count / RESULTS_PER_PAGE)
+
+        const repeats = Array.from(Array(pages-1).keys()).map(i => 2 + i);
+
+        const promises = repeats.map( (promisePage) => axios.get(`${SWAPI_BASE_URL}planets?page=${promisePage}`))
+
+        const results = await Promise.all(promises)
+
+        let planets = [ ...firstPage.results, ...results.map( res => res.data.results ).flat() ]
+
+        residents = [...new Set(planets.map((planet) => (planet.residents)).flat())]
+        //console.log(residents)
+        const residentsResults = await Promise.allSettled(residents.map(resident => axios.get(resident)))
+
+        const residentsData =  residentsResults.map( res => ( res.status === 'fulfilled' ? {...res.value.data} : {} ))
+
+        planets = planets.map((planet) => {
+            return {
+                ...planet,
+                residents: planet.residents.map((resid) => {
+                    const findResident = residentsData.find((resident) => resident.url === resid)
+                    return findResident ? findResident.name : resid
+                } )
+            }
+
+        })
+
+        return res.status(200).json({
+            length: planets.length,
+            planets,
+        })
+    } catch (error) {
+        console.error(error)
+    }
+})
+
 app.listen(4000, () => {
     console.log('Listening on port 4000')
 })
