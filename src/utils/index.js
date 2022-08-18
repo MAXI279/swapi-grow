@@ -6,7 +6,16 @@ sortByString = (property) => {
 }
 
 sortByNumeric= (property) => {
-    return (a,b) => ( Number(a[property]) - Number(b[property]) )
+    return (a,b) => {
+      const aValue = Number(a[property].replaceAll(',', ''))
+      const bValue = Number(b[property].replaceAll(',', ''))
+
+      if(!isNaN(aValue) && !isNaN(bValue)){
+        return (aValue - bValue)
+      }else{
+        return isNaN(aValue) ? 1 : -1
+      }
+    }
 }
 
 const getAllResources = async (resource) => {

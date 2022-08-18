@@ -26,7 +26,10 @@ app.get('/people', async (req, res) => {
             people
         })
     } catch (error) {
-        console.error(error)
+        return res.status(500).json({
+            status: 500,
+            error: error.message
+        })
     }
 
 })
