@@ -1,40 +1,33 @@
 const express = require('express');
 const axios = require('axios').default;
 
+const validateQueryParams = require('./middlewares/validate-query-params')
 const { sortByString, sortByNumeric, getAllResources } = require('./utils')
+const { getPeople } = require('./use-cases/get-people');
+const ErrorHandler = require('./utils/ErrorHandler');
+const HttpResponse = require('./utils/HttpResponse');
+const Logger = require('./utils/Logger');
 
 const app = express();
 
-app.get('/people', async (req, res) => {
+const logger = new Logger();
+const requestHandler = new HttpResponse(logger);
+
+app.get('/people', validateQueryParams('sortBy', ['height', 'name', 'mass']), async (req, res, next) => {
     const { sortBy } = req.query;
     try {
 
-        let people = await getAllResources('people')
+        const people = await getPeople(sortBy)
 
-        const availableProps = {
-            'name': sortByString("name"),
-            'height': sortByNumeric("height"),
-            'mass': sortByNumeric("mass")
-        }
+        return requestHandler.sendSuccess(res,200)({ length: people.length, people })
 
-        if(sortBy && availableProps[sortBy]){
-            people = people.sort(availableProps[sortBy])
-        }
-
-        return res.status(200).json({
-            length: people.length,
-            people
-        })
     } catch (error) {
-        return res.status(500).json({
-            status: 500,
-            error: error.message
-        })
+        next(error)
     }
 
 })
 
-app.get('/planets', async (req, res) => {
+app.get('/planets', async (req, res, next) => {
 
     try {
         let planets = await getAllResources('planets')
@@ -61,9 +54,11 @@ app.get('/planets', async (req, res) => {
             planets,
         })
     } catch (error) {
-        console.error(error)
+        next(error)
     }
 })
+
+app.use(ErrorHandler)
 
 app.listen(4000, () => {
     console.log('Listening on port 4000')
